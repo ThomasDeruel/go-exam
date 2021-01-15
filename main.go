@@ -6,12 +6,14 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"io/ioutil"
 )
 
 type Task struct {
-	Description string
-	Done        bool
+	Description string `json:"description"`
+	Done        bool   `json:"done"`
 }
+
 type List struct {
 	ID   string `json:"id"`
 	Task string `json:"task"`
@@ -21,11 +23,6 @@ var tasks []Task
 
 func list(rw http.ResponseWriter, _ *http.Request) {
 	list := []List{}
-	tasks = []Task{
-		{"Faire l'examen dans les temps", false},
-		{"Se poser dans son lit", true},
-		{"Faire les cours", false},
-	}
 	for id, el := range tasks {
 		if !el.Done {
 			list = append(list, List{strconv.Itoa(id), el.Description})
@@ -35,19 +32,33 @@ func list(rw http.ResponseWriter, _ *http.Request) {
 	data, _ := json.Marshal(list)
 
 	rw.Write(data)
-	return
 }
 func done(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("done")
 }
-func add(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("add")
+func add(rw http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		rw.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		fmt.Printf("Errorreadingbody:%v", err)
+		http.Error(rw,"can'treadbody", http.StatusBadRequest,)
+		return
+	}
+	description := string(body)
+
+	fmt.Println(description)
+
+	tasks = append(tasks,Task{description, false})
+	fmt.Println(tasks)
 }
 func main() {
 
 	http.HandleFunc("/", list)
-	http.HandleFunc("/done", done)
 	http.HandleFunc("/add", add)
+	http.HandleFunc("/done", done)
 
 	log.Fatal(http.ListenAndServe(":8081", nil))
 }
