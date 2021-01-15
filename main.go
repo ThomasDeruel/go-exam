@@ -10,25 +10,22 @@ type Task struct {
 	Description string
 	Done        bool
 }
+var tasks []Task
 
-func list(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("default")
-	return
+func list(rw http.ResponseWriter, _ *http.Request) {
+	fmt.Println("list")
 }
 func done(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("done")
-	return
 }
 func add(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("add")
-	return
 }
 func main() {
-	//var task []Task
 	
-	http.HandleFunc("/", defaultHandler)
-	http.HandleFunc("/done", doneHandler)
-	http.HandleFunc("/add", addHandler)
+	http.HandleFunc("/", list)
+	http.HandleFunc("/done", done)
+	http.HandleFunc("/add", add)
 
 	log.Fatal(http.ListenAndServe(":8081", nil))
 }
