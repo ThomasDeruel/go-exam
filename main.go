@@ -33,10 +33,32 @@ func list(rw http.ResponseWriter, _ *http.Request) {
 
 	rw.Write(data)
 }
-func done(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("done")
+func done(rw http.ResponseWriter, r *http.Request) {
+	switch r.Method{
+	case http.MethodGet:
+		fmt.Println("get")
+		rw.WriteHeader(http.StatusOK)
+		data, _ := json.Marshal(filterDone())
+		rw.Write(data)
+	case http.MethodPost:
+		myid := r.FormValue("id")
+		id,_ := strconv.Atoi(myid)
+		if id > len(tasks)-1{
+			rw.WriteHeader(http.StatusBadRequest)
+		}
+		for ind, _ := range tasks {
+			if ind == id {
+				tasks[ind] = Task{myid,true}
+			}
+		}
+		rw.WriteHeader(http.StatusOK)
+	default:
+		rw.WriteHeader(http.StatusBadRequest)
+	}
 }
 func add(rw http.ResponseWriter, r *http.Request) {
+
+
 	if r.Method != http.MethodPost {
 		rw.WriteHeader(http.StatusBadRequest)
 		return
@@ -48,11 +70,17 @@ func add(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 	description := string(body)
-
-	fmt.Println(description)
-
 	tasks = append(tasks,Task{description, false})
-	fmt.Println(tasks)
+}
+
+func filterDone() []List{
+	list := []List{}
+	for id, el := range tasks {
+		if el.Done {
+			list = append(list, List{strconv.Itoa(id), el.Description})
+		}
+	}
+	return list
 }
 func main() {
 
